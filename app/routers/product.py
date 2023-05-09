@@ -1,6 +1,6 @@
 from fastapi import APIRouter,HTTPException,status, Depends
 from sqlalchemy.orm import Session
-from .. import models,database
+from .. import models,database,oauth2
 from typing import List,Optional
 from .. schemas import ProductResponse,ProductCreate
 
@@ -9,7 +9,7 @@ router = APIRouter(prefix="/products", tags=["Products"])
 
 
 @router.get("/",status_code=status.HTTP_200_OK, response_model=List[ProductResponse])
-def get_products(db:Session= Depends(database.get_db),limit : int = 50, skip:int = 0, search : Optional[str] = ""):
+def get_products(db:Session= Depends(database.get_db),limit : int = 50, skip:int = 0, search : Optional[str] = "",current_user = Depends(oauth2.get_current_admin)):
 
     products = db.query(models.Product).filter( models.Product.name.contains(search)).limit(limit).offset(skip).all()
     
@@ -21,7 +21,7 @@ def get_products(db:Session= Depends(database.get_db),limit : int = 50, skip:int
 
 
 @router.post("/", status_code = status.HTTP_201_CREATED, response_model = ProductResponse)
-def create_product(product: ProductCreate , db:Session = Depends(database.get_db)):
+def create_product(product: ProductCreate , db:Session = Depends(database.get_db),current_user = Depends(oauth2.get_current_admin)):
     new_product = models.Product(**product.dict())
 
 
@@ -36,7 +36,7 @@ def create_product(product: ProductCreate , db:Session = Depends(database.get_db
 
 
 @router.get("/{id}" ,status_code=status.HTTP_200_OK,response_model = ProductResponse)
-def get_single_product(id:int, db: Session = Depends(database.get_db)):
+def get_single_product(id:int, db: Session = Depends(database.get_db),current_user = Depends(oauth2.get_current_admin)):
 
     single_product = db.query(models.Product).filter(models.Product.id == id).first()
     
@@ -47,7 +47,7 @@ def get_single_product(id:int, db: Session = Depends(database.get_db)):
     return single_product
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_product(id:int,db:Session = Depends(database.get_db)):
+def delete_product(id:int,db:Session = Depends(database.get_db),current_user = Depends(oauth2.get_current_admin)):
    product_query = db.query(models.Product).filter(models.Product.id == id)
 
    if product_query.first() == None:
@@ -58,7 +58,7 @@ def delete_product(id:int,db:Session = Depends(database.get_db)):
 
 
 @router.put("/{id}", status_code=status.HTTP_205_RESET_CONTENT,response_model=ProductResponse)
-def update_product(updated_product:ProductCreate,id:int,db:Session = Depends(database.get_db)):
+def update_product(updated_product:ProductCreate,id:int,db:Session = Depends(database.get_db),current_user = Depends(oauth2.get_current_admin)):
    
     product_query = db.query(models.Product).filter(models.Product.id == id)
 

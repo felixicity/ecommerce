@@ -23,6 +23,7 @@ class ProductResponse(Product):
 
 
 class User(BaseModel):
+    name:Optional[str]
     email:EmailStr
 
 class UserCreate(User):
@@ -42,14 +43,18 @@ class Admin(BaseModel):
     name:str
     email:EmailStr
     password:str
-    
-class AdminCreate(Admin):
+
+class ChiefAdmin(Admin):
     role:str
+
+
+
+class AdminCreate(Admin):
+    isAdmin:bool
 
 class AdminCreateResponse(Admin):
     id:int
     name:str
-    role:str
 
     class Config():
         orm_mode = True
@@ -60,11 +65,11 @@ class AdminLogin(Admin):
 class CartItem(BaseModel):
     item_id:int
     quantity:int
-    cart_id:int
     
 class Cart(BaseModel):
     user_id:int
     items:List[CartItem] = []
+
 
 class CartOut(Cart):
      id:int
@@ -81,7 +86,16 @@ class TokenData(BaseModel):
     id:int
     created_at: Optional[str] = None
 
-    
+class AdminTokenData(BaseModel):
+    id:int
+    role:str
+    password:str
+    created_at: Optional[str] = None
+
+class AdminTokenData(BaseModel):
+    id:int
+    password:str
+    created_at: Optional[str] = None
 class Order(BaseModel):
     amount: float
     currency:str
@@ -89,6 +103,10 @@ class Order(BaseModel):
     user_id:int
     status:Optional[str]
 
+class OrderCreate(BaseModel):
+    amount: float
+    currency:str
+    item_id:int
 class OrderCreated(Order):
     id:int
     status:str
@@ -99,7 +117,7 @@ class OrderCreated(Order):
 class OrderOut(Order):
     id:int
     status:str
-    user_details:CreateUserResponse
+    user:CreateUserResponse
 
     class Config():
         orm_mode = True

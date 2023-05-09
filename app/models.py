@@ -1,5 +1,5 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer,String,JSON
-from sqlalchemy.orm import relationship,Mapped
+from sqlalchemy import Boolean, Column, ForeignKey, Integer,String, Float
+from sqlalchemy.orm import relationship,backref
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from typing import List
@@ -25,6 +25,7 @@ class User(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key= True, nullable=False,index=True)
+    name = Column(String)
     email = Column(String, nullable=False,unique=True,index=True)
     password = Column(String, nullable=False)
     isActive = Column(Boolean, default=True)
@@ -43,7 +44,7 @@ class Order(Base):
     item_id= Column(Integer,ForeignKey("products.id",ondelete="CASCADE"),nullable=False)
     user_id = Column(Integer,ForeignKey("users.id",ondelete="CASCADE"),nullable=False)
 
-    user_details= relationship("User")
+    user= relationship("User")
 
 class CartItem(Base):
     __tablename__ = 'cart_item'
@@ -51,14 +52,22 @@ class CartItem(Base):
     item_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"),nullable=False)
     quantity = Column(Integer)
     cart_id = Column(Integer, ForeignKey("cart.id", ondelete="CASCADE") ,nullable=False)
-    cart= relationship("Cart", back_populates='items')
+    # Define the relationship between ShoppingCartItem and ShoppingCart
+    cart = relationship('Cart', back_populates='items')
+
+    # Define the relationship between ShoppingCartItem and Product
+    product = relationship('Product')
+
 
 class Cart(Base):
     __tablename__ = 'cart'
     id = Column(Integer, primary_key=True, nullable=False)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"),nullable=False)
+
     items= relationship("CartItem", back_populates='cart')
-    user = relationship("User",back_populates="cart")
+
+     # Define the relationship between ShoppingCart and User
+    user = relationship('User', back_populates='cart', uselist=False)
 
 
 class Product(Base):
@@ -69,10 +78,10 @@ class Product(Base):
     description = Column(String, nullable=False)
     category = Column(String, nullable=False)
     image_url = Column(String, nullable=False)
-    price = Column(Integer, nullable=False)
+    price = Column(Float, nullable=False)
     quantity = Column(Integer, nullable=False)
     discount = Column(Integer, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True),nullable=False, server_default=text('now()'))
 
 
-
+    
